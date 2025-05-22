@@ -1,8 +1,0 @@
-https://docs.cleartax.in/cleartax-docs/identity-api/identity-api-reference/gstin-verification-basic
-
-convert to desktop app
-https://clouwood.com/the-easiest-way-to-convert-your-react-app-to-electron-desktop-app/
-
-https://dashboard.render.com/
-https://www.figma.com/design/d5UuP9w6SzB619RVLZQH7Z/BB?node-id=422-4805&t=EmTRra2ijbjh5GVY-0
-https://www.figma.com/design/d5UuP9w6SzB619RVLZQH7Z/BB?node-id=0-1&t=S7hXC8tYCKeE0KGi-0
