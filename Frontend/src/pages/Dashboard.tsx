@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Plus, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import Header from '../components/Header';
@@ -37,7 +37,7 @@ function Dashboard() {
   };
 
   const toggleTodo = (id: number) => {
-    setTodos(todos.map(todo => 
+    setTodos(todos.map(todo =>
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
   };
@@ -45,6 +45,35 @@ function Dashboard() {
   const deleteTodo = (id: number) => {
     setTodos(todos.filter(todo => todo.id !== id));
   };
+
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const routeOptions = [
+    { label: 'Home', path: '/' },
+    { label: 'Parties - Network', path: '/parties/network' },
+    { label: 'Parties - Smart Connect', path: '/parties/smart-connect' },
+    { label: 'Party Details', path: '/parties/details' },
+    { label: 'Items', path: '/items' },
+    { label: 'Sale', path: '/sale' }
+  ];
+
+  const filteredRoutes = routeOptions.filter(option =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Focus search input on Ctrl+F / Cmd+F
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const Home = () => (
     <div className="p-4">
@@ -86,14 +115,14 @@ function Dashboard() {
               <LineChart data={salesData}>
                 <XAxis dataKey="date" hide />
                 <YAxis hide />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ background: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
                   formatter={(value) => [`₹ ${value}`, 'Amount']}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#3b82f6" 
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#3b82f6"
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 4 }}
@@ -169,6 +198,40 @@ function Dashboard() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <BusinessName />
+
+          {/* Search input */}
+          <div className="px-4 pt-4 relative z-10">
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Search pages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm mb-2"
+            />
+
+            {searchQuery && (
+              <div className="bg-white border rounded-md shadow-md max-h-40 overflow-y-auto absolute w-full">
+                {filteredRoutes.length === 0 ? (
+                  <div className="p-2 text-sm text-gray-500">No matches found</div>
+                ) : (
+                  filteredRoutes.map((route) => (
+                    <div
+                      key={route.path}
+                      onClick={() => {
+                        navigate(route.path);
+                        setSearchQuery('');
+                      }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm text-gray-700"
+                    >
+                      {route.label}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="flex-1 bg-[#f0f8ff] overflow-y-auto">
             <Routes>
               <Route path="/" element={<Home />} />
