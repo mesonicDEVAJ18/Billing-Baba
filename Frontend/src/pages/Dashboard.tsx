@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -9,6 +9,7 @@ import VyaparNetwork from './VyaparNetwork';
 import SmartConnect from './SmartConnect';
 import PartyDetails from './PartyDetails';
 import Items from './Items';
+import Sale from './Sale';
 
 function Dashboard() {
   const [invoiceData, setInvoiceData] = useState({
@@ -51,6 +52,7 @@ function Dashboard() {
               <Route path="/parties/smart-connect" element={<SmartConnect />} />
               <Route path="/parties/details" element={<PartyDetails />} />
               <Route path="/items" element={<Items />} />
+              <Route path="/sale" element={<Sale />} />
             </Routes>
           </div>
         </div>

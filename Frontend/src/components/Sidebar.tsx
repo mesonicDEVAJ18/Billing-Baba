@@ -43,10 +43,14 @@ const Sidebar: React.FC = () => {
               <SidebarSubItem text="Network" isActive={location.pathname === '/parties/network'} />
             </Link>
           </div>
+
+          <Link to="/Sale">
+          <SidebarItem icon={<Home size={20} />} text="Sale" isActive={location.pathname === '/'} />
+        </Link>
         </div>
 
         <SidebarItem icon={<Package size={20} />} text="Items" hasPlus />
-        <SidebarItem icon={<CreditCard size={20} />} text="Sale" hasDropdown />
+        {/* <SidebarItem icon={<CreditCard size={20} />} text="Sale" hasDropdown /> */}
         <SidebarItem icon={<ShoppingCart size={20} />} text="Purchase & Expense" hasDropdown />
         <SidebarItem icon={<BarChart2 size={20} />} text="Grow Your Business" hasDropdown />
         <SidebarItem icon={<ShoppingBag size={20} />} text="Cash & Bank" hasDropdown />
