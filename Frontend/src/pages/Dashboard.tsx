@@ -8,6 +8,7 @@ import BusinessName from '../components/BusinessName';
 import InvoiceForm from '../components/InvoiceForm';
 import InvoicePreview from '../components/InvoicePreview';
 import VyaparNetwork from './VyaparNetwork';
+import MyCompany from './MyCompany';
 import SmartConnect from './SmartConnect';
 import PartyDetails from './PartyDetails';
 import Items from './Items';
@@ -56,7 +57,8 @@ function Dashboard() {
     { label: 'Parties - Smart Connect', path: '/parties/smart-connect' },
     { label: 'Party Details', path: '/parties/details' },
     { label: 'Items', path: '/items' },
-    { label: 'Sale', path: '/sale' }
+    { label: 'Sale', path: '/sale' },
+    { label: 'MyCompany', path: '/MYCompany' }
   ];
 
   const filteredRoutes = routeOptions.filter(option =>
@@ -240,6 +242,7 @@ function Dashboard() {
               <Route path="/parties/details" element={<PartyDetails />} />
               <Route path="/items" element={<Items />} />
               <Route path="/sale" element={<Sale />} />
+              <Route path="/mycompany" element={<MyCompany />} />
             </Routes>
           </div>
         </div>

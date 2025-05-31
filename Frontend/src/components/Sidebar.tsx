@@ -44,7 +44,7 @@ const Sidebar: React.FC = () => {
             </Link>
           </div>
 
-          <Link to="/Sale">
+        <Link to="/Sale">
           <SidebarItem icon={<Home size={20} />} text="Sale" isActive={location.pathname === '/'} />
         </Link>
         </div>
@@ -59,6 +59,9 @@ const Sidebar: React.FC = () => {
         <SidebarItem icon={<Settings size={20} />} text="Utilities" hasDropdown />
         <SidebarItem icon={<Settings size={20} />} text="Settings" />
         <SidebarItem icon={<CreditCard size={20} />} text="Plans & Pricing" />
+        <Link to="/mycompany">
+          <SidebarItem icon={<Home size={20} />} text="My Company" isActive={location.pathname === '/mycompany'} />
+        </Link>
       </div>
       
       <div className="mt-auto p-4 border-t border-[#2d3052]">
