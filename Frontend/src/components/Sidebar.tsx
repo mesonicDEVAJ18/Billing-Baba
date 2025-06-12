@@ -11,7 +11,11 @@ import {
   Repeat, 
   Settings, 
   Package, 
-  ChevronRight
+  ChevronRight,
+  Building2,
+  Wallet,
+  FileCheck,
+  Landmark
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -43,25 +47,65 @@ const Sidebar: React.FC = () => {
               <SidebarSubItem text="Network" isActive={location.pathname === '/parties/network'} />
             </Link>
           </div>
-
-        <Link to="/Sale">
-          <SidebarItem icon={<Home size={20} />} text="Sale" isActive={location.pathname === '/'} />
-        </Link>
         </div>
 
-        <SidebarItem icon={<Package size={20} />} text="Items" hasPlus />
-        {/* <SidebarItem icon={<CreditCard size={20} />} text="Sale" hasDropdown /> */}
+        <Link to="/items">
+          <SidebarItem icon={<Package size={20} />} text="Items" hasPlus />
+        </Link>
+        
+        <div>
+          <SidebarItem icon={<CreditCard size={20} />} text="Sale" hasDropdown />
+          <div className="pl-8 bg-[#151729]">
+            <Link to="/sale/invoices">
+              <SidebarSubItem text="Sale Invoices" isActive={location.pathname === '/sale/invoices'} hasPlus />
+            </Link>
+            <Link to="/sale/estimate-quotation">
+              <SidebarSubItem text="Estimate/ Quotation" isActive={location.pathname === '/sale/estimate-quotation'} hasPlus />
+            </Link>
+            <Link to="/sale/payment-in">
+              <SidebarSubItem text="Payment In" isActive={location.pathname === '/sale/payment-in'} hasPlus />
+            </Link>
+            <Link to="/sale/sale-order">
+              <SidebarSubItem text="Sale Order" isActive={location.pathname === '/sale/sale-order'} hasPlus />
+            </Link>
+            <Link to="/sale/delivery-challan">
+              <SidebarSubItem text="Delivery Challan" isActive={location.pathname === '/sale/delivery-challan'} hasPlus />
+            </Link>
+            <Link to="/sale/sale-return-credit-note">
+              <SidebarSubItem text="Sale Return/ Credit Note" isActive={location.pathname === '/sale/sale-return-credit-note'} hasPlus />
+            </Link>
+            <Link to="/sale/vyapar-pos">
+              <SidebarSubItem text="Billing-Baba POS" isActive={location.pathname === '/sale/vyapar-pos'} />
+            </Link>
+          </div>
+        </div>
+        
         <SidebarItem icon={<ShoppingCart size={20} />} text="Purchase & Expense" hasDropdown />
         <SidebarItem icon={<BarChart2 size={20} />} text="Grow Your Business" hasDropdown />
-        <SidebarItem icon={<ShoppingBag size={20} />} text="Cash & Bank" hasDropdown />
+        
+        <div>
+          <SidebarItem icon={<ShoppingBag size={20} />} text="Cash & Bank" hasDropdown />
+          <div className="pl-8 bg-[#151729]">
+            <Link to="/bank-accounts">
+              <SidebarSubItem text="Bank Accounts" isActive={location.pathname === '/bank-accounts'} hasPlus />
+            </Link>
+            <Link to="/cash-in-hand">
+              <SidebarSubItem text="Cash In Hand" isActive={location.pathname === '/cash-in-hand'} hasPlus />
+            </Link>
+            <Link to="/cheques">
+              <SidebarSubItem text="Cheques" isActive={location.pathname === '/cheques'} />
+            </Link>
+            <Link to="/loan-accounts">
+              <SidebarSubItem text="Loan Accounts" isActive={location.pathname === '/loan-accounts'} hasPlus />
+            </Link>
+          </div>
+        </div>
+
         <SidebarItem icon={<PieChart size={20} />} text="Reports" />
         <SidebarItem icon={<Repeat size={20} />} text="Sync, Share & Backup" hasDropdown />
         <SidebarItem icon={<Settings size={20} />} text="Utilities" hasDropdown />
         <SidebarItem icon={<Settings size={20} />} text="Settings" />
         <SidebarItem icon={<CreditCard size={20} />} text="Plans & Pricing" />
-        <Link to="/mycompany">
-          <SidebarItem icon={<Home size={20} />} text="My Company" isActive={location.pathname === '/mycompany'} />
-        </Link>
       </div>
       
       <div className="mt-auto p-4 border-t border-[#2d3052]">
