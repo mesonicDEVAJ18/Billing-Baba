@@ -70,7 +70,7 @@ const PhoneInput = ({ value, onChange, disabled }: { value: string; onChange: (v
       </div>
       <input
         type="tel"
-        className="block w-full pl-24 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+        className="block w-full pl-24 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
         placeholder="Enter your phone number"
         value={formatPhoneNumber(value)}
         onChange={handleChange}
@@ -197,7 +197,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 to-slate-900 flex items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-red-600 to-red-100 flex items-center justify-center p-4 font-sans">
       {toast.show && (
         <div className="fixed top-4 right-4 z-50">
           <Toast message={toast.message} type={toast.type} onClose={hideToast} />
@@ -206,11 +206,11 @@ const Login: React.FC = () => {
       
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transition-all duration-300 animate-fadeIn">
         <div className="flex items-center justify-center mb-6">
-          <div className="h-12 w-12 bg-indigo-50 rounded-full flex items-center justify-center mr-3">
-            <Briefcase className="h-6 w-6 text-indigo-600" />
+          <div className="h-12 w-12 bg-red-50 rounded-full flex items-center justify-center mr-3">
+            <Briefcase className="h-6 w-6 text-red-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-amber-500 bg-clip-text text-transparent">
               Billing Baba
             </h1>
           </div>
@@ -225,7 +225,7 @@ const Login: React.FC = () => {
           <button
             className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
               authMethod === 'otp' 
-                ? 'bg-white shadow-sm text-indigo-600' 
+                ? 'bg-white shadow-sm text-red-600' 
                 : 'text-gray-600 hover:text-gray-800'
             }`}
             onClick={() => {
@@ -238,7 +238,7 @@ const Login: React.FC = () => {
           <button
             className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
               authMethod === 'password' 
-                ? 'bg-white shadow-sm text-indigo-600' 
+                ? 'bg-white shadow-sm text-red-600' 
                 : 'text-gray-600 hover:text-gray-800'
             }`}
             onClick={() => {
@@ -266,7 +266,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 px-4 rounded-lg hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-red-600 to-amber-500 text-white py-3 px-4 rounded-lg hover:from-red-700 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <svg className="animate-spin h-5 w-5 text-white\" xmlns="http://www.w3.org/2000/svg\" fill="none\" viewBox="0 0 24 24">
@@ -303,7 +303,7 @@ const Login: React.FC = () => {
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     onPaste={index === 0 ? handleOtpPaste : undefined}
-                    className="w-full h-12 text-center text-lg font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full h-12 text-center text-lg font-semibold border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                     disabled={isLoading}
                   />
                 ))}
@@ -312,7 +312,7 @@ const Login: React.FC = () => {
               <button
                 type="button"
                 disabled={isLoading}
-                className="text-indigo-600 text-sm hover:text-indigo-700 flex items-center disabled:text-gray-400"
+                className="text-red-600 text-sm hover:text-red-700 flex items-center disabled:text-gray-400"
                 onClick={handleResendOtp}
               >
                 <RotateCcw className="h-3 w-3 mr-1" />
@@ -323,7 +323,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 px-4 rounded-lg hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
+              className="w-full mt-6 bg-gradient-to-r from-red-600 to-amber-500 text-white py-3 px-4 rounded-lg hover:from-red-700 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <svg className="animate-spin h-5 w-5 text-white\" xmlns="http://www.w3.org/2000/svg\" fill="none\" viewBox="0 0 24 24">
@@ -355,7 +355,7 @@ const Login: React.FC = () => {
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Password
                 </label>
-                <a href="#" className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a href="#" className="text-sm text-red-600 hover:text-red-800 transition-colors">
                   Forgot Password?
                 </a>
               </div>
@@ -365,7 +365,7 @@ const Login: React.FC = () => {
                 </div>
                 <input
                   type="password"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -378,7 +378,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 px-4 rounded-lg hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-red-600 to-amber-500 text-white py-3 px-4 rounded-lg hover:from-red-700 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <svg className="animate-spin h-5 w-5 text-white\" xmlns="http://www.w3.org/2000/svg\" fill="none\" viewBox="0 0 24 24">
@@ -403,7 +403,7 @@ const Login: React.FC = () => {
 
         <p className="text-center text-gray-600">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+          <Link to="/signup" className="text-red-600 hover:text-red-800 font-medium transition-colors">
             Sign up for free
           </Link>
         </p>
