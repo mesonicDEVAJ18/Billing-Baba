@@ -29,8 +29,8 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "cd Frontend && npm run dev",
+    "build": "cd Frontend && npm run build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
