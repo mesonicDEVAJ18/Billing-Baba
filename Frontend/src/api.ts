@@ -2,98 +2,111 @@ import axios from 'axios';
 
 const API_BASE = 'http://localhost:5000/api';
 
-const api = axios.create({
+const axiosInstance = axios.create({
   baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export function setAuthToken(token: string | null) {
+// Automatically attach JWT if available
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
   if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common['Authorization'];
+    config.headers.Authorization = `Bearer ${token}`;
   }
-}
+  return config;
+});
 
-// AUTH
-/**
- * POST /signup/
- * Input: { email: string, password: string, password2: string }
- * Output: { token: string, user: { id: number, email: string } }
- */
-export const signup = (data: { email: string; password: string; password2: string }) =>
-  api.post('/signup/', data);
+// Auth APIs
+export const sendOtp = (phone: string) =>
+  axiosInstance.post('/auth/send-otp/', { phone });
 
-/**
- * POST /login/
- * Input: { email: string, password: string }
- * Output: { token: string, user: { id: number, email: string } }
- */
-export const login = (data: { email: string; password: string }) =>
-  api.post('/login/', data);
+export const verifyOtp = (phone: string, otp: string, otp_id: string) =>
+  axiosInstance.post('/auth/verify-otp/', { phone, otp, otp_id });
 
-/**
- * GET /me/
- * Header: Authorization: Bearer <token>
- * Output: { id: number, email: string }
- */
-export const getMe = () => api.get('/me/');
+export const register = (data: {
+  phone: string;
+  name: string;
+  email?: string;
+  password: string;
+  otp: string;
+  otp_id: string;
+}) => axiosInstance.post('/auth/register/', data);
 
-// DASHBOARD
-/**
- * GET /summary/
- * Output: { total_sales: string, total_customers: number, total_invoices: number, total_products: number, last_updated: string }
- */
-export const getSummary = () => api.get('/summary/');
+export const login = (phone: string, password: string) =>
+  axiosInstance.post('/auth/login/', { phone, password });
 
-/**
- * GET /invoices/recent/
- * Output: Array<{ id: string, customer: string, amount: string, status: string, date: string }>
- */
-export const getRecentInvoices = () => api.get('/invoices/recent/');
+// Company APIs
+export const createCompany = (company: any) =>
+  axiosInstance.post('/companies/', company);
 
-// CUSTOMERS
-/** GET /customers/ */
-export const getCustomers = () => api.get('/customers/');
-/** POST /customers/ */
-export const addCustomer = (data: any) => api.post('/customers/', data);
-/** GET /customers/:id/ */
-export const getCustomer = (id: number) => api.get(`/customers/${id}/`);
-/** PUT /customers/:id/ */
-export const updateCustomer = (id: number, data: any) => api.put(`/customers/${id}/`, data);
-/** DELETE /customers/:id/ */
-export const deleteCustomer = (id: number) => api.delete(`/customers/${id}/`);
+export const getCompanies = () =>
+  axiosInstance.get('/companies/');
 
-// INVOICES
-/** GET /invoices/ */
-export const getInvoices = () => api.get('/invoices/');
-/** POST /invoices/ */
-export const addInvoice = (data: any) => api.post('/invoices/', data);
-/** GET /invoices/:id/ */
-export const getInvoice = (id: number) => api.get(`/invoices/${id}/`);
-/** PUT /invoices/:id/ */
-export const updateInvoice = (id: number, data: any) => api.put(`/invoices/${id}/`, data);
-/** DELETE /invoices/:id/ */
-export const deleteInvoice = (id: number) => api.delete(`/invoices/${id}/`);
+// Party APIs
+export const createParty = (party: any) =>
+  axiosInstance.post('/parties/', party);
 
-// PRODUCTS
-/** GET /products/ */
-export const getProducts = () => api.get('/products/');
-/** POST /products/ */
-export const addProduct = (data: any) => api.post('/products/', data);
-/** GET /products/:id/ */
-export const getProduct = (id: number) => api.get(`/products/${id}/`);
-/** PUT /products/:id/ */
-export const updateProduct = (id: number, data: any) => api.put(`/products/${id}/`, data);
-/** DELETE /products/:id/ */
-export const deleteProduct = (id: number) => api.delete(`/products/${id}/`);
+export const getParties = (params?: { type?: string; search?: string }) =>
+  axiosInstance.get('/parties/', { params });
 
-// SALES
-/** GET /sales/ */
-export const getSales = () => api.get('/sales/');
-/** GET /sales/top-products/ */
-export const getTopProducts = () => api.get('/sales/top-products/');
+// Item APIs
+export const createItem = (item: any) =>
+  axiosInstance.post('/items/', item);
 
-export default api;
+export const getItems = (params?: { category?: string; search?: string }) =>
+  axiosInstance.get('/items/', { params });
+
+// Invoice APIs
+export const createInvoice = (invoice: any) =>
+  axiosInstance.post('/sales/invoices/', invoice);
+
+export const getInvoices = (params?: {
+  start_date?: string;
+  end_date?: string;
+  party_id?: string;
+  status?: string;
+}) => axiosInstance.get('/sales/invoices/', { params });
+
+// Estimate APIs
+export const createEstimate = (estimate: any) =>
+  axiosInstance.post('/sales/estimates/', estimate);
+
+export const convertEstimateToInvoice = (estimate_id: number, data: any) =>
+  axiosInstance.post(`/sales/estimates/${estimate_id}/convert-to-invoice/`, data);
+
+// Payment APIs
+export const recordPaymentIn = (payment: any) =>
+  axiosInstance.post('/payments/payment-in/', payment);
+
+// Bank Account APIs
+export const createBankAccount = (account: any) =>
+  axiosInstance.post('/cash-bank/bank-accounts/', account);
+
+// Cash APIs
+export const getCashInHand = () =>
+  axiosInstance.get('/cash-bank/cash-in-hand/');
+
+// Dashboard API
+export const getDashboard = () =>
+  axiosInstance.get('/dashboard/');
+
+// Reports
+export const getSalesReport = (params?: {
+  start_date?: string;
+  end_date?: string;
+  party_id?: string;
+}) => axiosInstance.get('/reports/sales/', { params });
+
+export const getPartyStatement = (party_id: number, params?: {
+  start_date?: string;
+  end_date?: string;
+}) => axiosInstance.get(`/reports/party-statement/${party_id}/`, { params });
+
+// Todo APIs
+export const createTodo = (todo: any) =>
+  axiosInstance.post('/todos/', todo);
+
+export const getTodos = (params?: { completed?: string }) =>
+  axiosInstance.get('/todos/', { params });
