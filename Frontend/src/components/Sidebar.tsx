@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Users, 
@@ -14,17 +14,66 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+const routeOptions = [
+  { label: 'Home', path: '/' },
+  { label: 'Party Details', path: '/parties/details' },
+  { label: 'Smart Connect', path: '/parties/smart-connect' },
+  { label: 'Network', path: '/parties/network' },
+  { label: 'Sale', path: '/Sale' },
+  { label: 'Items', path: '/items' },
+  { label: 'Purchase & Expense', path: '/purchase-expense' },
+  { label: 'Grow Your Business', path: '/grow-business' },
+  { label: 'Cash & Bank', path: '/cash-bank' },
+  { label: 'Reports', path: '/reports' },
+  { label: 'Sync, Share & Backup', path: '/sync-share-backup' },
+  { label: 'Utilities', path: '/utilities' },
+  { label: 'Settings', path: '/settings' },
+  { label: 'Plans & Pricing', path: '/plans-pricing' },
+  { label: 'My Company', path: '/mycompany' },
+];
+
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredRoutes = routeOptions.filter(option =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="w-[230px] bg-[#1a1d37] text-white flex flex-col h-screen">
-      <div className="p-4 mb-4">
-        <button className="bg-[#2d3052] text-white px-4 py-2 rounded-md w-full text-left">
-          Open Anything (Ctrl+F)
-        </button>
-      </div>
-      
+          <div className="px-4 pt-4 relative z-10">
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Search pages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm mb-2"
+            />
+
+            {searchQuery && (
+              <div className="bg-white border rounded-md shadow-md max-h-40 overflow-y-auto absolute w-full">
+                {filteredRoutes.length === 0 ? (
+                  <div className="p-2 text-sm text-gray-500">No matches found</div>
+                ) : (
+                  filteredRoutes.map((route) => (
+                    <div
+                      key={route.path}
+                      onClick={() => {
+                        navigate(route.path);
+                        setSearchQuery('');
+                      }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm text-gray-700"
+                    >
+                      {route.label}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
       <div className="flex-1 overflow-y-auto">
         <Link to="/">
           <SidebarItem icon={<Home size={20} />} text="Home" isActive={location.pathname === '/'} />
@@ -63,16 +112,7 @@ const Sidebar: React.FC = () => {
           <SidebarItem icon={<Home size={20} />} text="My Company" isActive={location.pathname === '/mycompany'} />
         </Link>
       </div>
-      
-      <div className="mt-auto p-4 border-t border-[#2d3052]">
-        <button className="text-white w-full flex items-center justify-between">
-          <div className="flex items-center">
-            <span className="w-6 h-6 bg-white rounded-full flex items-center justify-center mr-2 text-[#1a1d37] text-xs">M</span>
-            <span>My Company</span>
-          </div>
-          <ChevronRight size={16} />
-        </button>
-      </div>
+    
     </div>
   );
 };
