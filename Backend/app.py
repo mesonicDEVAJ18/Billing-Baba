@@ -343,10 +343,8 @@ def verify_otp():
             'name': user.name,
             'email': user.email
         },
-        'tokens': {
-            'access': access_token,
-            'refresh': refresh_token
-        }
+        'access': access_token,
+        'refresh': refresh_token
     })
 
 @app.route('/api/auth/login/', methods=['POST'])
