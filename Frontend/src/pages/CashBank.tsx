@@ -6,14 +6,11 @@ import toast from 'react-hot-toast';
 
 interface BankAccount {
   id: number;
-  bank_name: string;
+  account_name: string;
   account_number: string;
-  account_holder_name: string;
-  ifsc_code: string;
-  branch?: string;
-  account_type?: string;
-  opening_balance?: number;
-  current_balance: number;
+  bank_name: string;
+  balance: number;
+  account_type: string;
 }
 
 interface Transaction {
@@ -26,10 +23,8 @@ interface Transaction {
 }
 
 const CashBank = () => {
-  const [cashData, setCashData] = useState({
-    current_balance: 0,
-    transactions: []
-  });
+
+  const [cashInHand, setCashInHand] = useState(0);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [transactions] = useState<Transaction[]>([
     {
@@ -60,11 +55,9 @@ const CashBank = () => {
 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [accountForm, setAccountForm] = useState({
-    bank_name: '',
+    account_name: '',
     account_number: '',
-    account_holder_name: '',
-    ifsc_code: '',
-    branch: '',
+    bank_name: '',
     account_type: 'savings',
     opening_balance: 0
   });
@@ -84,9 +77,8 @@ const CashBank = () => {
   const fetchCashData = async () => {
     try {
       const response = await getCashInHand();
-      if (response.data.success) {
-        setCashData(response.data.cash_in_hand);
-      }
+      setCashInHand(response.data.balance);
+
     } catch (error) {
       console.error('Failed to fetch cash data:', error);
     }
@@ -97,27 +89,24 @@ const CashBank = () => {
     
     try {
       const response = await createBankAccount(accountForm);
-      if (response.data.success) {
-        setBankAccounts([...bankAccounts, response.data.bank_account]);
-        setAccountForm({
-          bank_name: '',
-          account_number: '',
-          account_holder_name: '',
-          ifsc_code: '',
-          branch: '',
-          account_type: 'savings',
-          opening_balance: 0
-        });
-        setShowAddAccount(false);
-        toast.success('Bank account added successfully');
-      }
+      setBankAccounts([...bankAccounts, response.data]);
+      setAccountForm({
+        account_name: '',
+        account_number: '',
+        bank_name: '',
+        account_type: 'savings',
+        opening_balance: 0
+      });
+      setShowAddAccount(false);
+      toast.success('Bank account added successfully');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to add bank account');
     }
   };
 
-  const totalBankBalance = bankAccounts.reduce((sum, account) => sum + account.current_balance, 0);
-  const totalBalance = cashData.current_balance + totalBankBalance;
+
+  const totalBankBalance = bankAccounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalBalance = cashInHand + totalBankBalance;
 
   const totalCashIn = transactions
     .filter(t => t.type === 'in')
@@ -174,7 +163,7 @@ const CashBank = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm font-medium">Cash in Hand</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">₹ {cashData.current_balance.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">₹ {cashInHand.toLocaleString()}</p>
                 <div className="flex items-center mt-2">
                   <Banknote className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-green-500 text-sm font-medium">Available</span>
@@ -275,12 +264,13 @@ const CashBank = () => {
                     <div key={account.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-medium text-gray-800">{account.account_holder_name}</h4>
+
+                          <h4 className="font-medium text-gray-800">{account.account_name}</h4>
                           <p className="text-sm text-gray-600">{account.bank_name}</p>
                           <p className="text-sm text-gray-500">****{account.account_number.slice(-4)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-gray-800">₹ {account.current_balance.toLocaleString()}</p>
+                          <p className="font-semibold text-gray-800">₹ {account.balance.toLocaleString()}</p>
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                             {account.account_type}
                           </span>
@@ -348,14 +338,14 @@ const CashBank = () => {
               <form onSubmit={handleAddAccount} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Account Holder Name *
+                    Account Name *
                   </label>
                   <input
                     type="text"
-                    value={accountForm.account_holder_name}
-                    onChange={(e) => setAccountForm({ ...accountForm, account_holder_name: e.target.value })}
+                    value={accountForm.account_name}
+                    onChange={(e) => setAccountForm({ ...accountForm, account_name: e.target.value })}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter account holder name"
+                    placeholder="Enter account name"
                     required
                   />
                 </div>
@@ -385,33 +375,6 @@ const CashBank = () => {
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter account number"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    IFSC Code *
-                  </label>
-                  <input
-                    type="text"
-                    value={accountForm.ifsc_code}
-                    onChange={(e) => setAccountForm({ ...accountForm, ifsc_code: e.target.value })}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter IFSC code"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Branch
-                  </label>
-                  <input
-                    type="text"
-                    value={accountForm.branch}
-                    onChange={(e) => setAccountForm({ ...accountForm, branch: e.target.value })}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter branch name"
                   />
                 </div>
 

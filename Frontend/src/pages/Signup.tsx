@@ -59,7 +59,7 @@ const Signup: React.FC = () => {
   const [otpId, setOtpId] = useState('');
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, setToken } = useAuth();
   
   const otpInputRefs = Array(6).fill(0).map(() => useRef<HTMLInputElement>(null));
 
@@ -97,15 +97,11 @@ const Signup: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await sendOtp(formData.phone);
-      if (response.data.success) {
-        setOtpId(response.data.otp_id);
-        setShowOtpInput(true);
-        toast.success('OTP sent successfully!');
-        if (otpInputRefs[0].current) {
-          otpInputRefs[0].current.focus();
-        }
-      } else {
-        toast.error(response.data.message || 'Failed to send OTP');
+      setOtpId(response.data.otp_id);
+      setShowOtpInput(true);
+      toast.success('OTP sent successfully!');
+      if (otpInputRefs[0].current) {
+        otpInputRefs[0].current.focus();
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to send OTP');
@@ -156,12 +152,8 @@ const Signup: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await sendOtp(formData.phone);
-      if (response.data.success) {
-        setOtpId(response.data.otp_id);
-        toast.success('OTP resent successfully!');
-      } else {
-        toast.error(response.data.message || 'Failed to resend OTP');
-      }
+      setOtpId(response.data.otp_id);
+      toast.success('OTP resent successfully!');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to resend OTP');
     } finally {
@@ -189,14 +181,18 @@ const Signup: React.FC = () => {
         otp_id: otpId
       });
       
-      if (response.data.success) {
-        const { user, tokens } = response.data;
-        login(user, tokens);
-        toast.success('Account created successfully!');
-        navigate('/');
-      } else {
-        toast.error(response.data.message || 'Failed to create account');
-      }
+      const { access_token, user } = response.data;
+      
+      setToken(access_token);
+      login({
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email
+      });
+      
+      toast.success('Account created successfully!');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create account');
     } finally {

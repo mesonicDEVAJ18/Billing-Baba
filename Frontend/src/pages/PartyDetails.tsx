@@ -6,14 +6,11 @@ import toast from 'react-hot-toast';
 interface Party {
   id: number;
   name: string;
-  type: 'customer' | 'supplier' | 'both';
   phone?: string;
   email?: string;
   address?: string;
-  gst_number?: string;
-  credit_limit?: number;
-  payment_terms?: string;
-  balance?: number;
+  party_type: 'customer' | 'supplier' | 'both';
+  balance: number;
   created_at: string;
 }
 
@@ -26,13 +23,10 @@ const PartyDetails = () => {
   const [filterType, setFilterType] = useState<'all' | 'customer' | 'supplier' | 'both'>('all');
   const [formData, setFormData] = useState({
     name: '',
-    type: 'customer' as 'customer' | 'supplier' | 'both',
     phone: '',
     email: '',
     address: '',
-    gst_number: '',
-    credit_limit: '',
-    payment_terms: ''
+    party_type: 'customer' as 'customer' | 'supplier' | 'both'
   });
 
   useEffect(() => {
@@ -51,7 +45,7 @@ const PartyDetails = () => {
     }
     
     if (filterType !== 'all') {
-      filtered = filtered.filter(party => party.type === filterType);
+      filtered = filtered.filter(party => party.party_type === filterType);
     }
     
     setFilteredParties(filtered);
@@ -60,9 +54,7 @@ const PartyDetails = () => {
   const fetchParties = async () => {
     try {
       const response = await getParties();
-      if (response.data.success) {
-        setParties(response.data.parties);
-      }
+      setParties(response.data);
     } catch (error) {
       console.error('Failed to fetch parties:', error);
       toast.error('Failed to load parties');
@@ -80,27 +72,17 @@ const PartyDetails = () => {
     }
 
     try {
-      const partyData = {
-        ...formData,
-        credit_limit: formData.credit_limit ? parseFloat(formData.credit_limit) : undefined
-      };
-
-      const response = await createParty(partyData);
-      if (response.data.success) {
-        setParties([...parties, response.data.party]);
-        setFormData({
-          name: '',
-          type: 'customer',
-          phone: '',
-          email: '',
-          address: '',
-          gst_number: '',
-          credit_limit: '',
-          payment_terms: ''
-        });
-        setShowAddForm(false);
-        toast.success('Party added successfully');
-      }
+      const response = await createParty(formData);
+      setParties([...parties, response.data]);
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        address: '',
+        party_type: 'customer'
+      });
+      setShowAddForm(false);
+      toast.success('Party added successfully');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to add party');
     }
@@ -198,13 +180,13 @@ const PartyDetails = () => {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800">{party.name}</h3>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        party.type === 'customer' 
+                        party.party_type === 'customer' 
                           ? 'bg-green-100 text-green-800'
-                          : party.type === 'supplier'
+                          : party.party_type === 'supplier'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-purple-100 text-purple-800'
                       }`}>
-                        {party.type === 'both' ? 'Customer & Supplier' : party.type}
+                        {party.party_type === 'both' ? 'Customer & Supplier' : party.party_type}
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -242,10 +224,10 @@ const PartyDetails = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Balance</span>
                       <span className={`font-semibold ${
-                        (party.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        party.balance >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        ₹ {Math.abs(party.balance || 0).toLocaleString()}
-                        {(party.balance || 0) < 0 && ' (You owe)'}
+                        ₹ {Math.abs(party.balance).toLocaleString()}
+                        {party.balance < 0 && ' (You owe)'}
                       </span>
                     </div>
                   </div>
@@ -258,7 +240,7 @@ const PartyDetails = () => {
         {/* Add Party Modal */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">Add New Party</h2>
                 <button
@@ -290,8 +272,8 @@ const PartyDetails = () => {
                     Party Type
                   </label>
                   <select
-                    name="type"
-                    value={formData.type}
+                    name="party_type"
+                    value={formData.party_type}
                     onChange={handleInputChange}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
@@ -326,50 +308,6 @@ const PartyDetails = () => {
                     onChange={handleInputChange}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="Enter email address"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    GST Number
-                  </label>
-                  <input
-                    type="text"
-                    name="gst_number"
-                    value={formData.gst_number}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Enter GST number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Credit Limit
-                  </label>
-                  <input
-                    type="number"
-                    name="credit_limit"
-                    value={formData.credit_limit}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Enter credit limit"
-                    step="0.01"
-                    min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Payment Terms
-                  </label>
-                  <input
-                    type="text"
-                    name="payment_terms"
-                    value={formData.payment_terms}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="e.g., Net 30 days"
                   />
                 </div>
 

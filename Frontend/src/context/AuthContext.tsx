@@ -10,9 +10,11 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (userData: User, tokens: { access_token: string; refresh_token?: string }) => void;
+
+  login: (userData: User) => void;
   logout: () => void;
   token: string | null;
+  setToken: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,37 +22,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setTokenState] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('access_token');
+    const savedToken = localStorage.getItem('accessToken');
     const savedUser = localStorage.getItem('user');
     
     if (savedToken && savedUser) {
-      setToken(savedToken);
+      setTokenState(savedToken);
       setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
     }
   }, []);
 
-  const login = (userData: User, tokens: { access_token: string; refresh_token?: string }) => {
+  const login = (userData: User) => {
     setUser(userData);
     setIsAuthenticated(true);
-    setToken(tokens.access_token);
-    localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('user', JSON.stringify(userData));
-    if (tokens.refresh_token) {
-      localStorage.setItem('refresh_token', tokens.refresh_token);
-    }
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    setToken(null);
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+
+    setTokenState(null);
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+  };
+
+  const setToken = (newToken: string) => {
+    setTokenState(newToken);
+    localStorage.setItem('accessToken', newToken);
   };
 
   return (
@@ -59,7 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       login, 
       logout, 
-      token
+      token, 
+      setToken 
+
     }}>
       {children}
     </AuthContext.Provider>

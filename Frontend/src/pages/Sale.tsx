@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDownIcon, CalendarIcon, PrinterIcon, ChartBarIcon, ArrowUpIcon, Plus, Eye, Edit, Trash2 } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, CalendarIcon, PrinterIcon, ChartBarIcon, ArrowUpIcon, EllipsisHorizontalIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { getInvoices, createInvoice, getParties, getItems } from '../api';
 import toast from 'react-hot-toast';
 
 interface Invoice {
   id: number;
   invoice_number: string;
-  party: {
-    id: number;
-    name: string;
-  };
+  party_name: string;
   total_amount: number;
-  paid_amount?: number;
+  paid_amount: number;
   balance_amount: number;
   invoice_date: string;
   status: string;
-  payment_method?: string;
+  payment_type: string;
 }
 
 interface Party {
@@ -26,9 +23,7 @@ interface Party {
 interface Item {
   id: number;
   name: string;
-  pricing: {
-    sale_price: number;
-  };
+  sale_price: number;
 }
 
 const Sale: React.FC = () => {
@@ -40,13 +35,10 @@ const Sale: React.FC = () => {
   const [dateRange] = useState({ start: '01/05/2025', end: '31/05/2025' });
   const [formData, setFormData] = useState({
     party_id: '',
-    invoice_date: new Date().toISOString().split('T')[0],
-    due_date: '',
     items: [{ item_id: '', quantity: 1, rate: 0, amount: 0 }],
-    discount: 0,
-    shipping_charges: 0,
-    notes: '',
-    terms_conditions: ''
+    payment_type: 'cash',
+    paid_amount: 0,
+    notes: ''
   });
 
   useEffect(() => {
@@ -61,17 +53,9 @@ const Sale: React.FC = () => {
         getItems()
       ]);
       
-      if (invoicesResponse.data.success) {
-        setInvoices(invoicesResponse.data.invoices);
-      }
-      
-      if (partiesResponse.data.success) {
-        setParties(partiesResponse.data.parties);
-      }
-      
-      if (itemsResponse.data.success) {
-        setItems(itemsResponse.data.items);
-      }
+      setInvoices(invoicesResponse.data);
+      setParties(partiesResponse.data);
+      setItems(itemsResponse.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error('Failed to load data');
@@ -82,7 +66,7 @@ const Sale: React.FC = () => {
 
   const calculateTotals = () => {
     const totalSales = invoices.reduce((sum, invoice) => sum + invoice.total_amount, 0);
-    const totalReceived = invoices.reduce((sum, invoice) => sum + (invoice.paid_amount || 0), 0);
+    const totalReceived = invoices.reduce((sum, invoice) => sum + invoice.paid_amount, 0);
     const totalBalance = invoices.reduce((sum, invoice) => sum + invoice.balance_amount, 0);
     
     return { totalSales, totalReceived, totalBalance };
@@ -95,8 +79,8 @@ const Sale: React.FC = () => {
     if (field === 'item_id') {
       const selectedItem = items.find(item => item.id === parseInt(value));
       if (selectedItem) {
-        newItems[index].rate = selectedItem.pricing.sale_price;
-        newItems[index].amount = selectedItem.pricing.sale_price * newItems[index].quantity;
+        newItems[index].rate = selectedItem.sale_price;
+        newItems[index].amount = selectedItem.sale_price * newItems[index].quantity;
       }
     } else if (field === 'quantity' || field === 'rate') {
       newItems[index].amount = newItems[index].quantity * newItems[index].rate;
@@ -119,13 +103,8 @@ const Sale: React.FC = () => {
     }
   };
 
-  const calculateSubTotal = () => {
-    return formData.items.reduce((sum, item) => sum + item.amount, 0);
-  };
-
   const calculateTotal = () => {
-    const subTotal = calculateSubTotal();
-    return subTotal - formData.discount + formData.shipping_charges;
+    return formData.items.reduce((sum, item) => sum + item.amount, 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,35 +123,27 @@ const Sale: React.FC = () => {
     try {
       const invoiceData = {
         party_id: parseInt(formData.party_id),
-        invoice_date: formData.invoice_date,
-        due_date: formData.due_date || undefined,
         items: formData.items.map(item => ({
           item_id: parseInt(item.item_id),
           quantity: item.quantity,
           rate: item.rate
         })),
-        discount: formData.discount || undefined,
-        shipping_charges: formData.shipping_charges || undefined,
-        notes: formData.notes || undefined,
-        terms_conditions: formData.terms_conditions || undefined
+        payment_type: formData.payment_type,
+        paid_amount: formData.paid_amount,
+        notes: formData.notes
       };
 
       const response = await createInvoice(invoiceData);
-      if (response.data.success) {
-        setInvoices([response.data.invoice, ...invoices]);
-        setShowAddForm(false);
-        setFormData({
-          party_id: '',
-          invoice_date: new Date().toISOString().split('T')[0],
-          due_date: '',
-          items: [{ item_id: '', quantity: 1, rate: 0, amount: 0 }],
-          discount: 0,
-          shipping_charges: 0,
-          notes: '',
-          terms_conditions: ''
-        });
-        toast.success('Invoice created successfully');
-      }
+      setInvoices([response.data, ...invoices]);
+      setShowAddForm(false);
+      setFormData({
+        party_id: '',
+        items: [{ item_id: '', quantity: 1, rate: 0, amount: 0 }],
+        payment_type: 'cash',
+        paid_amount: 0,
+        notes: ''
+      });
+      toast.success('Invoice created successfully');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create invoice');
     }
@@ -201,7 +172,7 @@ const Sale: React.FC = () => {
             onClick={() => setShowAddForm(true)}
             className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-600 transition-colors"
           >
-            <Plus className="h-5 w-5" />
+            <PlusIcon className="h-5 w-5" />
             Add Sale
           </button>
         </div>
@@ -279,7 +250,7 @@ const Sale: React.FC = () => {
                     <th className="text-left p-4 text-gray-600">Date</th>
                     <th className="text-left p-4 text-gray-600">Invoice No</th>
                     <th className="text-left p-4 text-gray-600">Party Name</th>
-                    <th className="text-left p-4 text-gray-600">Status</th>
+                    <th className="text-left p-4 text-gray-600">Payment Type</th>
                     <th className="text-right p-4 text-gray-600">Amount</th>
                     <th className="text-right p-4 text-gray-600">Balance</th>
                     <th className="text-center p-4 text-gray-600">Actions</th>
@@ -290,27 +261,17 @@ const Sale: React.FC = () => {
                     <tr key={invoice.id} className="border-b hover:bg-gray-50">
                       <td className="p-4">{new Date(invoice.invoice_date).toLocaleDateString()}</td>
                       <td className="p-4">{invoice.invoice_number}</td>
-                      <td className="p-4 text-blue-600">{invoice.party.name}</td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          invoice.status === 'paid' 
-                            ? 'bg-green-100 text-green-800'
-                            : invoice.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {invoice.status}
-                        </span>
-                      </td>
+                      <td className="p-4 text-blue-600">{invoice.party_name}</td>
+                      <td className="p-4 capitalize">{invoice.payment_type}</td>
                       <td className="p-4 text-right">₹ {invoice.total_amount.toLocaleString()}</td>
                       <td className="p-4 text-right">₹ {invoice.balance_amount.toLocaleString()}</td>
                       <td className="p-4">
                         <div className="flex justify-center gap-2">
                           <button className="p-1 hover:bg-gray-100 rounded">
-                            <Eye className="h-4 w-4 text-gray-500" />
+                            <EyeIcon className="h-4 w-4 text-gray-500" />
                           </button>
                           <button className="p-1 hover:bg-gray-100 rounded">
-                            <Edit className="h-4 w-4 text-gray-500" />
+                            <PencilIcon className="h-4 w-4 text-gray-500" />
                           </button>
                           <button className="p-1 hover:bg-gray-100 rounded">
                             <PrinterIcon className="h-4 w-4 text-gray-500" />
@@ -335,56 +296,29 @@ const Sale: React.FC = () => {
                   onClick={() => setShowAddForm(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <Plus size={24} className="rotate-45" />
+                  <PlusIcon className="h-6 w-6 rotate-45" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Party and Date Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Select Party *
-                    </label>
-                    <select
-                      value={formData.party_id}
-                      onChange={(e) => setFormData({ ...formData, party_id: e.target.value })}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      required
-                    >
-                      <option value="">Choose a party</option>
-                      {parties.map((party) => (
-                        <option key={party.id} value={party.id}>
-                          {party.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Invoice Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.invoice_date}
-                      onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Due Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.due_date}
-                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
+                {/* Party Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Party *
+                  </label>
+                  <select
+                    value={formData.party_id}
+                    onChange={(e) => setFormData({ ...formData, party_id: e.target.value })}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  >
+                    <option value="">Choose a party</option>
+                    {parties.map((party) => (
+                      <option key={party.id} value={party.id}>
+                        {party.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Items */}
@@ -398,7 +332,7 @@ const Sale: React.FC = () => {
                       onClick={addItem}
                       className="text-blue-500 hover:text-blue-600 flex items-center gap-1"
                     >
-                      <Plus size={16} />
+                      <PlusIcon className="h-4 w-4" />
                       Add Item
                     </button>
                   </div>
@@ -460,7 +394,7 @@ const Sale: React.FC = () => {
                               onClick={() => removeItem(index)}
                               className="text-red-500 hover:text-red-600"
                             >
-                              <Trash2 size={16} />
+                              <TrashIcon className="h-4 w-4" />
                             </button>
                           )}
                         </div>
@@ -469,83 +403,63 @@ const Sale: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Additional Charges */}
+                {/* Payment Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Discount
+                      Payment Type
                     </label>
-                    <input
-                      type="number"
-                      value={formData.discount}
-                      onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
+                    <select
+                      value={formData.payment_type}
+                      onChange={(e) => setFormData({ ...formData, payment_type: e.target.value })}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                    />
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="credit">Credit</option>
+                      <option value="bank">Bank Transfer</option>
+                      <option value="cheque">Cheque</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Shipping Charges
+                      Paid Amount
                     </label>
                     <input
                       type="number"
-                      value={formData.shipping_charges}
-                      onChange={(e) => setFormData({ ...formData, shipping_charges: parseFloat(e.target.value) || 0 })}
+                      value={formData.paid_amount}
+                      onChange={(e) => setFormData({ ...formData, paid_amount: parseFloat(e.target.value) || 0 })}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="0.00"
                       step="0.01"
                       min="0"
+                      max={calculateTotal()}
                     />
                   </div>
                 </div>
 
-                {/* Notes and Terms */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes
-                    </label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      rows={3}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="Add any notes..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Terms & Conditions
-                    </label>
-                    <textarea
-                      value={formData.terms_conditions}
-                      onChange={(e) => setFormData({ ...formData, terms_conditions: e.target.value })}
-                      rows={3}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="Add terms and conditions..."
-                    />
-                  </div>
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={3}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="Add any notes..."
+                  />
                 </div>
 
                 {/* Total */}
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center text-sm mb-2">
-                    <span>Sub Total:</span>
-                    <span>₹ {calculateSubTotal().toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm mb-2">
-                    <span>Discount:</span>
-                    <span>- ₹ {formData.discount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm mb-2">
-                    <span>Shipping:</span>
-                    <span>+ ₹ {formData.shipping_charges.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-lg font-semibold border-t pt-2">
+                  <div className="flex justify-between items-center text-lg font-semibold">
                     <span>Total Amount:</span>
                     <span>₹ {calculateTotal().toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-600 mt-1">
+                    <span>Balance:</span>
+                    <span>₹ {(calculateTotal() - formData.paid_amount).toLocaleString()}</span>
                   </div>
                 </div>
 
