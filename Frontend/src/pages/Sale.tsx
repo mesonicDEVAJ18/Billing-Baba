@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDownIcon, CalendarIcon, PrinterIcon, ChartBarIcon, ArrowUpIcon, EllipsisHorizontalIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, CalendarIcon, PrinterIcon, ChartBarIcon, ArrowUpIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { getInvoices, createInvoice, getParties, getItems } from '../api';
 import toast from 'react-hot-toast';
 
