@@ -22,13 +22,15 @@ function Dashboard() {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
   const [dashboardData, setDashboardData] = useState({
-    totalReceivable: 0,
-    totalPayable: 0,
-    totalSales: 0,
-    salesData: [],
-    recentTransactions: [],
-    topCustomers: [],
-    monthlyComparison: 0
+    summary: {
+      total_receivable: 0,
+      total_payable: 0,
+      total_sales: 0,
+      active_customers: 0
+    },
+    sales_chart: [],
+    recent_transactions: [],
+    pending_invoices: []
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,8 +44,13 @@ function Dashboard() {
           getTodos()
         ]);
         
-        setDashboardData(dashboardResponse.data);
-        setTodos(todosResponse.data);
+        if (dashboardResponse.data.success) {
+          setDashboardData(dashboardResponse.data.dashboard);
+        }
+        
+        if (todosResponse.data.success) {
+          setTodos(todosResponse.data.todos);
+        }
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
@@ -61,9 +68,11 @@ function Dashboard() {
     if (!newTodo.trim()) return;
     
     try {
-      const response = await createTodo({ text: newTodo, completed: false });
-      setTodos([...todos, response.data]);
-      setNewTodo('');
+      const response = await createTodo({ text: newTodo, priority: 'medium' });
+      if (response.data.success) {
+        setTodos([...todos, response.data.todo]);
+        setNewTodo('');
+      }
     } catch (error) {
       console.error('Failed to create todo:', error);
     }
@@ -91,7 +100,7 @@ function Dashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const salesData = [
+  const salesData = dashboardData.sales_chart.length > 0 ? dashboardData.sales_chart : [
     { date: '1 May', amount: 0 },
     { date: '7 May', amount: 5000 },
     { date: '14 May', amount: 12000 },
@@ -125,7 +134,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Total Receivable</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">₹ {dashboardData.totalReceivable.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">₹ {dashboardData.summary.total_receivable.toLocaleString()}</p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                 <span className="text-green-500 text-sm font-medium">+12%</span>
@@ -142,7 +151,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Total Payable</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">₹ {dashboardData.totalPayable.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">₹ {dashboardData.summary.total_payable.toLocaleString()}</p>
               <div className="flex items-center mt-2">
                 <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
                 <span className="text-red-500 text-sm font-medium">-5%</span>
@@ -159,7 +168,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Total Sales</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">₹ {dashboardData.totalSales.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">₹ {dashboardData.summary.total_sales.toLocaleString()}</p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-blue-500 mr-1" />
                 <span className="text-blue-500 text-sm font-medium">+25%</span>
@@ -176,7 +185,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium">Active Customers</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">156</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{dashboardData.summary.active_customers}</p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="h-4 w-4 text-purple-500 mr-1" />
                 <span className="text-purple-500 text-sm font-medium">+8%</span>
@@ -268,42 +277,76 @@ function Dashboard() {
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {[
-                { id: 1, type: 'Sale', party: 'ABC Electronics', amount: 15000, date: '2 hours ago', status: 'completed' },
-                { id: 2, type: 'Purchase', party: 'XYZ Suppliers', amount: -8000, date: '5 hours ago', status: 'pending' },
-                { id: 3, type: 'Payment', party: 'Customer Payment', amount: 12000, date: '1 day ago', status: 'completed' },
-                { id: 4, type: 'Expense', party: 'Office Rent', amount: -5000, date: '2 days ago', status: 'completed' }
-              ].map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
-                    }`}>
-                      <FileText className={`h-5 w-5 ${
+              {dashboardData.recent_transactions.length > 0 ? (
+                dashboardData.recent_transactions.map((transaction: any) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                        transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
+                      }`}>
+                        <FileText className={`h-5 w-5 ${
+                          transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                        }`} />
+                      </div>
+                      <div className="ml-4">
+                        <p className="font-medium text-gray-800">{transaction.description}</p>
+                        <p className="text-sm text-gray-500">{transaction.type} • {transaction.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-semibold ${
                         transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                      }`} />
-                    </div>
-                    <div className="ml-4">
-                      <p className="font-medium text-gray-800">{transaction.party}</p>
-                      <p className="text-sm text-gray-500">{transaction.type} • {transaction.date}</p>
+                      }`}>
+                        {transaction.amount > 0 ? '+' : ''}₹ {Math.abs(transaction.amount).toLocaleString()}
+                      </p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        transaction.status === 'completed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {transaction.status}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${
-                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}₹ {Math.abs(transaction.amount).toLocaleString()}
-                    </p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      transaction.status === 'completed' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {transaction.status}
-                    </span>
+                ))
+              ) : (
+                [
+                  { id: 1, type: 'Sale', party: 'ABC Electronics', amount: 15000, date: '2 hours ago', status: 'completed' },
+                  { id: 2, type: 'Purchase', party: 'XYZ Suppliers', amount: -8000, date: '5 hours ago', status: 'pending' },
+                  { id: 3, type: 'Payment', party: 'Customer Payment', amount: 12000, date: '1 day ago', status: 'completed' },
+                  { id: 4, type: 'Expense', party: 'Office Rent', amount: -5000, date: '2 days ago', status: 'completed' }
+                ].map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                        transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
+                      }`}>
+                        <FileText className={`h-5 w-5 ${
+                          transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                        }`} />
+                      </div>
+                      <div className="ml-4">
+                        <p className="font-medium text-gray-800">{transaction.party}</p>
+                        <p className="text-sm text-gray-500">{transaction.type} • {transaction.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-semibold ${
+                        transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {transaction.amount > 0 ? '+' : ''}₹ {Math.abs(transaction.amount).toLocaleString()}
+                      </p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        transaction.status === 'completed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {transaction.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

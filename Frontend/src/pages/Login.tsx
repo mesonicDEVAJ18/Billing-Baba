@@ -5,44 +5,6 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { sendOtp, verifyOtp, login as apiLogin } from '../api';
 
-// Toast component
-const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div
-      className={`max-w-xs w-full ${
-        type === 'success' ? 'bg-green-100 border-l-4 border-green-500 text-green-800' : 'bg-red-100 border-l-4 border-red-500 text-red-800'
-      } rounded-lg shadow-lg overflow-hidden animate-slideIn transition-all duration-300`}
-      role="alert"
-    >
-      <div className="p-4 flex items-start">
-        <div className={`flex-shrink-0 ${type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
-          {type === 'success' ? <Check className="h-5 w-5" /> : <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>}
-        </div>
-        <div className="ml-3 w-0 flex-1 pt-0.5">
-          <p className="text-sm font-medium">{message}</p>
-        </div>
-        <div className="ml-4 flex-shrink-0 flex">
-          <button
-            className="inline-flex text-gray-400 focus:outline-none focus:text-gray-500 transition ease-in-out duration-150"
-            onClick={onClose}
-          >
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Phone input component
 const PhoneInput = ({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled?: boolean }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,43 +53,34 @@ const Login: React.FC = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [otpId, setOtpId] = useState('');
-  const [toastState, setToastState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
-    show: false,
-    message: '',
-    type: 'success'
-  });
 
   const navigate = useNavigate();
-  const { login, setToken } = useAuth();
+  const { login } = useAuth();
   
   const otpInputRefs = Array(6).fill(0).map(() => useRef<HTMLInputElement>(null));
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToastState({ show: true, message, type });
-  };
-
-  const hideToast = () => {
-    setToastState(prev => ({ ...prev, show: false }));
-  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.replace(/\D/g, '').length !== 10) {
-      showToast('Please enter a valid 10-digit phone number', 'error');
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
     
     setIsLoading(true);
     try {
       const response = await sendOtp(phone);
-      setOtpId(response.data.otp_id);
-      setShowOtpInput(true);
-      showToast('OTP sent successfully!', 'success');
-      if (otpInputRefs[0].current) {
-        otpInputRefs[0].current.focus();
+      if (response.data.success) {
+        setOtpId(response.data.otp_id);
+        setShowOtpInput(true);
+        toast.success('OTP sent successfully!');
+        if (otpInputRefs[0].current) {
+          otpInputRefs[0].current.focus();
+        }
+      } else {
+        toast.error(response.data.message || 'Failed to send OTP');
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to send OTP', 'error');
+      toast.error(error.response?.data?.message || 'Failed to send OTP');
     } finally {
       setIsLoading(false);
     }
@@ -175,10 +128,14 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await sendOtp(phone);
-      setOtpId(response.data.otp_id);
-      showToast('OTP resent successfully!', 'success');
+      if (response.data.success) {
+        setOtpId(response.data.otp_id);
+        toast.success('OTP resent successfully!');
+      } else {
+        toast.error(response.data.message || 'Failed to resend OTP');
+      }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to resend OTP', 'error');
+      toast.error(error.response?.data?.message || 'Failed to resend OTP');
     } finally {
       setIsLoading(false);
     }
@@ -190,53 +147,45 @@ const Login: React.FC = () => {
     if (authMethod === 'otp') {
       const otpValue = otp.join('');
       if (otpValue.length !== 6) {
-        showToast('Please enter a valid 6-digit OTP', 'error');
+        toast.error('Please enter a valid 6-digit OTP');
         return;
       }
       
       setIsLoading(true);
       try {
-        const response = await verifyOtp(phone, otpValue, otpId);
-        const { access_token, user } = response.data;
-        
-        setToken(access_token);
-        login({
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          email: user.email
-        });
-        
-        showToast('Login successful!', 'success');
-        navigate('/');
+        const response = await verifyOtp({ phone, otp: otpValue, otp_id: otpId });
+        if (response.data.success) {
+          const { user, tokens } = response.data;
+          login(user, tokens);
+          toast.success('Login successful!');
+          navigate('/');
+        } else {
+          toast.error(response.data.message || 'Invalid OTP');
+        }
       } catch (error: any) {
-        showToast(error.response?.data?.message || 'Invalid OTP', 'error');
+        toast.error(error.response?.data?.message || 'Invalid OTP');
       } finally {
         setIsLoading(false);
       }
     } else {
       if (password.length < 6) {
-        showToast('Password must be at least 6 characters', 'error');
+        toast.error('Password must be at least 6 characters');
         return;
       }
       
       setIsLoading(true);
       try {
-        const response = await apiLogin(phone, password);
-        const { access_token, user } = response.data;
-        
-        setToken(access_token);
-        login({
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          email: user.email
-        });
-        
-        showToast('Login successful!', 'success');
-        navigate('/');
+        const response = await apiLogin({ phone, password });
+        if (response.data.success) {
+          const { user, tokens } = response.data;
+          login(user, tokens);
+          toast.success('Login successful!');
+          navigate('/');
+        } else {
+          toast.error(response.data.message || 'Invalid credentials');
+        }
       } catch (error: any) {
-        showToast(error.response?.data?.message || 'Invalid credentials', 'error');
+        toast.error(error.response?.data?.message || 'Invalid credentials');
       } finally {
         setIsLoading(false);
       }
@@ -245,12 +194,6 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-600 to-red-100 flex items-center justify-center p-4 font-sans">
-      {toastState.show && (
-        <div className="fixed top-4 right-4 z-50">
-          <Toast message={toastState.message} type={toastState.type} onClose={hideToast} />
-        </div>
-      )}
-      
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transition-all duration-300 animate-fadeIn">
         <div className="flex items-center justify-center mb-6">
           <div className="h-12 w-12 bg-red-50 rounded-full flex items-center justify-center mr-3">
@@ -258,7 +201,7 @@ const Login: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-amber-500 bg-clip-text text-transparent">
-              Vyapar
+              Billing Baba
             </h1>
           </div>
         </div>

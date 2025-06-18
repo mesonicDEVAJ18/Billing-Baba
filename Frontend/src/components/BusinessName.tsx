@@ -11,8 +11,8 @@ const BusinessName: React.FC = () => {
     const fetchCompanies = async () => {
       try {
         const response = await getCompanies();
-        if (response.data.length > 0) {
-          setBusinessName(response.data[0].name);
+        if (response.data.success && response.data.companies.length > 0) {
+          setBusinessName(response.data.companies[0].name);
         }
       } catch (error) {
         console.error('Failed to fetch companies:', error);

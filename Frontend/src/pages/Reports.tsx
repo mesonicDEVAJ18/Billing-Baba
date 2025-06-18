@@ -61,13 +61,24 @@ const Reports = () => {
     setIsLoading(true);
     try {
       if (activeReport === 'sales') {
-        // const response = await getSalesReport({ start_date: '2025-05-01', end_date: '2025-05-31' });
-        setSalesData(mockSalesData);
+        const response = await getSalesReport({ start_date: '2025-05-01', end_date: '2025-05-31' });
+        if (response.data.success) {
+          // Use API data if available, otherwise use mock data
+          setSalesData(response.data.report.sales_chart || mockSalesData);
+        } else {
+          setSalesData(mockSalesData);
+        }
       } else if (activeReport === 'party') {
         setPartyData(mockPartyData);
       }
     } catch (error) {
       console.error('Failed to fetch report data:', error);
+      // Use mock data on error
+      if (activeReport === 'sales') {
+        setSalesData(mockSalesData);
+      } else if (activeReport === 'party') {
+        setPartyData(mockPartyData);
+      }
     } finally {
       setIsLoading(false);
     }

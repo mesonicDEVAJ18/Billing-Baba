@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Settings, X, Camera, Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Search, X, Plus, Edit, Trash2, Package } from 'lucide-react';
 import { getItems, createItem } from '../api';
 import toast from 'react-hot-toast';
 
 interface Item {
   id: number;
   name: string;
-  item_code?: string;
-  category?: string;
-  unit?: string;
-  sale_price: number;
-  purchase_price?: number;
-  stock_quantity?: number;
+  type?: string;
   hsn_code?: string;
-  tax_rate?: number;
+  category?: string;
+  item_code?: string;
+  unit?: string;
+  pricing: {
+    sale_price: number;
+    purchase_price?: number;
+    tax_rate?: number;
+  };
+  stock?: {
+    current_stock?: number;
+    min_stock?: number;
+  };
+  description?: string;
   created_at: string;
 }
 
@@ -24,17 +31,19 @@ const Items = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [itemType, setItemType] = useState<'product' | 'service'>('product');
-  const [activeTab, setActiveTab] = useState<'pricing' | 'stock'>('pricing');
   const [formData, setFormData] = useState({
     name: '',
-    item_code: '',
+    type: 'product',
+    hsn_code: '',
     category: '',
+    item_code: '',
     unit: '',
     sale_price: '',
     purchase_price: '',
-    stock_quantity: '',
-    hsn_code: '',
-    tax_rate: '18'
+    tax_rate: '18',
+    current_stock: '',
+    min_stock: '',
+    description: ''
   });
 
   useEffect(() => {
@@ -58,7 +67,9 @@ const Items = () => {
   const fetchItems = async () => {
     try {
       const response = await getItems();
-      setItems(response.data);
+      if (response.data.success) {
+        setItems(response.data.items);
+      }
     } catch (error) {
       console.error('Failed to fetch items:', error);
       toast.error('Failed to load items');
@@ -82,34 +93,50 @@ const Items = () => {
 
     try {
       const itemData = {
-        ...formData,
-        sale_price: parseFloat(formData.sale_price),
-        purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : undefined,
-        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : undefined,
-        tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : undefined
+        name: formData.name,
+        type: formData.type,
+        hsn_code: formData.hsn_code,
+        category: formData.category,
+        item_code: formData.item_code,
+        unit: formData.unit,
+        pricing: {
+          sale_price: parseFloat(formData.sale_price),
+          purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : undefined,
+          tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : undefined
+        },
+        stock: formData.type === 'product' ? {
+          current_stock: formData.current_stock ? parseInt(formData.current_stock) : undefined,
+          min_stock: formData.min_stock ? parseInt(formData.min_stock) : undefined
+        } : undefined,
+        description: formData.description
       };
 
       const response = await createItem(itemData);
-      setItems([...items, response.data]);
-      setFormData({
-        name: '',
-        item_code: '',
-        category: '',
-        unit: '',
-        sale_price: '',
-        purchase_price: '',
-        stock_quantity: '',
-        hsn_code: '',
-        tax_rate: '18'
-      });
-      setShowAddForm(false);
-      toast.success('Item added successfully');
+      if (response.data.success) {
+        setItems([...items, response.data.item]);
+        setFormData({
+          name: '',
+          type: 'product',
+          hsn_code: '',
+          category: '',
+          item_code: '',
+          unit: '',
+          sale_price: '',
+          purchase_price: '',
+          tax_rate: '18',
+          current_stock: '',
+          min_stock: '',
+          description: ''
+        });
+        setShowAddForm(false);
+        toast.success('Item added successfully');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to add item');
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -221,7 +248,7 @@ const Items = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          ₹ {item.sale_price.toLocaleString()}
+                          ₹ {item.pricing.sale_price.toLocaleString()}
                         </div>
                         {item.unit && (
                           <div className="text-sm text-gray-500">per {item.unit}</div>
@@ -229,7 +256,7 @@ const Items = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {item.stock_quantity !== undefined ? item.stock_quantity : 'N/A'}
+                          {item.stock?.current_stock !== undefined ? item.stock.current_stock : 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -414,22 +441,53 @@ const Items = () => {
                     </div>
 
                     {itemType === 'product' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Stock Quantity
-                        </label>
-                        <input
-                          type="number"
-                          name="stock_quantity"
-                          value={formData.stock_quantity}
-                          onChange={handleInputChange}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="0"
-                          min="0"
-                        />
-                      </div>
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Current Stock
+                          </label>
+                          <input
+                            type="number"
+                            name="current_stock"
+                            value={formData.current_stock}
+                            onChange={handleInputChange}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Minimum Stock
+                          </label>
+                          <input
+                            type="number"
+                            name="min_stock"
+                            value={formData.min_stock}
+                            onChange={handleInputChange}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            placeholder="0"
+                            min="0"
+                          />
+                        </div>
+                      </>
                     )}
                   </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="Enter item description"
+                  />
                 </div>
 
                 <div className="flex gap-3 pt-4">
