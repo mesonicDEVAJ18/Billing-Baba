@@ -50,7 +50,6 @@ function Dashboard() {
         setIsLoading(false);
       }
     };
-
     if (user) {
       fetchDashboardData();
     }
@@ -92,6 +91,7 @@ function Dashboard() {
   }, []);
 
   const salesData = [
+
     { date: '1 May', amount: 0 },
     { date: '7 May', amount: 5000 },
     { date: '14 May', amount: 12000 },

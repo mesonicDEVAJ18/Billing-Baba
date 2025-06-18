@@ -23,6 +23,7 @@ interface Transaction {
 }
 
 const CashBank = () => {
+
   const [cashInHand, setCashInHand] = useState(0);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [transactions] = useState<Transaction[]>([
@@ -77,6 +78,7 @@ const CashBank = () => {
     try {
       const response = await getCashInHand();
       setCashInHand(response.data.balance);
+
     } catch (error) {
       console.error('Failed to fetch cash data:', error);
     }
@@ -101,6 +103,7 @@ const CashBank = () => {
       toast.error(error.response?.data?.message || 'Failed to add bank account');
     }
   };
+
 
   const totalBankBalance = bankAccounts.reduce((sum, account) => sum + account.balance, 0);
   const totalBalance = cashInHand + totalBankBalance;
@@ -261,6 +264,7 @@ const CashBank = () => {
                     <div key={account.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
+
                           <h4 className="font-medium text-gray-800">{account.account_name}</h4>
                           <p className="text-sm text-gray-600">{account.bank_name}</p>
                           <p className="text-sm text-gray-500">****{account.account_number.slice(-4)}</p>

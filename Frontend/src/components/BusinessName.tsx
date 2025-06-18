@@ -13,6 +13,7 @@ const BusinessName: React.FC = () => {
         const response = await getCompanies();
         if (response.data.length > 0) {
           setBusinessName(response.data[0].name);
+
         }
       } catch (error) {
         console.error('Failed to fetch companies:', error);

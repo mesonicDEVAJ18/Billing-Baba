@@ -4,7 +4,6 @@ import { Phone, Lock, ArrowRight, Check, RotateCcw, Briefcase } from 'lucide-rea
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { sendOtp, verifyOtp, login as apiLogin } from '../api';
-
 // Toast component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
   useEffect(() => {
@@ -113,7 +112,7 @@ const Login: React.FC = () => {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.replace(/\D/g, '').length !== 10) {
-      showToast('Please enter a valid 10-digit phone number', 'error');
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
     
@@ -190,7 +189,7 @@ const Login: React.FC = () => {
     if (authMethod === 'otp') {
       const otpValue = otp.join('');
       if (otpValue.length !== 6) {
-        showToast('Please enter a valid 6-digit OTP', 'error');
+        toast.error('Please enter a valid 6-digit OTP');
         return;
       }
       
@@ -216,7 +215,7 @@ const Login: React.FC = () => {
       }
     } else {
       if (password.length < 6) {
-        showToast('Password must be at least 6 characters', 'error');
+        toast.error('Password must be at least 6 characters');
         return;
       }
       
@@ -251,6 +250,7 @@ const Login: React.FC = () => {
         </div>
       )}
       
+
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transition-all duration-300 animate-fadeIn">
         <div className="flex items-center justify-center mb-6">
           <div className="h-12 w-12 bg-red-50 rounded-full flex items-center justify-center mr-3">

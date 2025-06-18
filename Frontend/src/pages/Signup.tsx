@@ -209,14 +209,14 @@ const Signup: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-amber-500 bg-clip-text text-transparent">
-              Vyapar
+              Billing Baba
             </h1>
           </div>
         </div>
         
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-800">Create Account</h2>
-          <p className="text-gray-600 mt-2">Join Vyapar to manage your business</p>
+          <p className="text-gray-600 mt-2">Join Billing Baba to manage your business</p>
         </div>
 
         {!showOtpInput ? (
