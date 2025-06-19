@@ -205,6 +205,26 @@ class Todo(db.Model):
 def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
+@app.route('/api/auth/me/', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'success': False, 'message': 'User not found'}), 404
+
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'name': user.name,
+            'phone': user.phone,
+            'email': user.email,
+            # Add any other fields you want to return
+        }
+    })
+
 def generate_number(prefix, model, field_name, user_id=None):
     """Generate unique number for invoices, estimates, etc."""
     if user_id:
@@ -333,7 +353,11 @@ def verify_otp():
         }), 404
 
     # Generate tokens
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity={
+    'id': user.id,
+    'name': user.name,
+    'phone': user.phone,
+})
     refresh_token = create_refresh_token(identity=user.id)
 
     return jsonify({
