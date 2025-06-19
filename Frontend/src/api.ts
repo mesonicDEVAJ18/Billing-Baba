@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 
-const BASE_URL = 'https://adamant-purpose-production.up.railway.app/api';
+const BASE_URL = 'http://localhost:5000/api'; // Update with your actual backend URL
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -46,7 +46,7 @@ export const register = (data: {
   phone: string;
   name: string;
   password: string;
-  otp: string;
+  otp: string;  
   otp_id: string;
   email?: string;
 }) => api.post('/auth/register/', data);
@@ -57,8 +57,11 @@ export const register = (data: {
  * Output: { success, message, user, tokens }
  */
 export const login = (data: { phone: string; password: string }) =>
-  api.post('/auth/login/', data);
-
+  api.post('/auth/login/', data, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 // ------------------ COMPANIES ------------------
 
 /**

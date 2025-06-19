@@ -247,6 +247,8 @@ def auth_required(f):
 @app.route('/api/auth/send-otp/', methods=['POST'])
 def send_otp():
     data = request.get_json()
+    print("Received JSON:", data)
+
     
     if not data or 'phone' not in data:
         return jsonify({
@@ -268,7 +270,7 @@ def send_otp():
     # Create new OTP
     otp = OTP(
         id=otp_id,
-        phone=phone,
+        phone=str(phone),
         otp=otp_code,
         expires_at=expires_at
     )
@@ -285,26 +287,28 @@ def send_otp():
         'expires_in': 300
     })
 
+from flask import request, jsonify
+from datetime import datetime
+
 @app.route('/api/auth/verify-otp/', methods=['POST'])
 def verify_otp():
-    data = request.get_json()
-    
     required_fields = ['phone', 'otp', 'otp_id']
-    if not data or not all(field in data for field in required_fields):
-        return jsonify({
-            'success': False,
-            'error': {
-                'code': 'VALIDATION_ERROR',
-                'message': 'Phone, OTP and OTP ID are required'
-            }
-        }), 400
-    
+    print("Received JSON:", data)
+
+    data, error_response, status = get_json_or_error(required_fields)
+    if error_response:
+        return error_response, status
+
+    otp_id = data['otp_id']
+    phone = data['phone']
+    otp = data['otp']
+
     otp_record = OTP.query.filter_by(
-        id=data['otp_id'],
-        phone=data['phone'],
-        otp=data['otp']
+        id=otp_id,
+        phone=phone,
+        otp=otp
     ).first()
-    
+
     if not otp_record or otp_record.expires_at < datetime.utcnow():
         return jsonify({
             'success': False,
@@ -313,14 +317,13 @@ def verify_otp():
                 'message': 'Invalid or expired OTP'
             }
         }), 400
-    
+
     # Mark OTP as verified
     otp_record.is_verified = True
     db.session.commit()
-    
+
     # Check if user exists
-    user = User.query.filter_by(phone=data['phone']).first()
-    
+    user = User.query.filter_by(phone=phone).first()
     if not user:
         return jsonify({
             'success': False,
@@ -329,11 +332,11 @@ def verify_otp():
                 'message': 'User not found. Please register first.'
             }
         }), 404
-    
+
     # Generate tokens
     access_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
-    
+
     return jsonify({
         'success': True,
         'message': 'Login successful',
@@ -347,22 +350,26 @@ def verify_otp():
         'refresh': refresh_token
     })
 
+
 @app.route('/api/auth/login/', methods=['POST'])
 def login():
-    data = request.get_json()
-    
-    if not data or 'phone' not in data or 'password' not in data:
-        return jsonify({
-            'success': False,
-            'error': {
-                'code': 'VALIDATION_ERROR',
-                'message': 'Phone and password are required'
-            }
-        }), 400
-    
-    user = User.query.filter_by(phone=data['phone']).first()
-    
-    if not user or not check_password_hash(user.password_hash, data['password']):
+    print("Headers:", dict(request.headers))
+    print("Raw data:", request.data)
+    print("Received JSON:", request.get_json())
+
+    required_fields = ['phone', 'password']
+    data, error_response, status = get_json_or_error(required_fields)
+    print("Received JSON:", data)
+
+    if error_response:
+        return error_response, status
+
+    phone = data['phone']
+    password = data['password']
+
+    user = User.query.filter_by(phone=phone).first()
+
+    if not user or not check_password_hash(user.password_hash, password):
         return jsonify({
             'success': False,
             'error': {
@@ -370,10 +377,10 @@ def login():
                 'message': 'Invalid phone or password'
             }
         }), 401
-    
+
     access_token = create_access_token(identity=user.id)
     refresh_token = create_refresh_token(identity=user.id)
-    
+
     return jsonify({
         'success': True,
         'message': 'Login successful',
@@ -388,6 +395,30 @@ def login():
             'refresh': refresh_token
         }
     })
+
+def get_json_or_error(required_fields=None):
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return None, jsonify({
+            "success": False,
+            "error": {
+                "code": "INVALID_JSON",
+                "message": "Invalid or malformed JSON. Expected an object."
+            }
+        }), 400
+
+    if required_fields and not all(field in data for field in required_fields):
+        return None, jsonify({
+            "success": False,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": f"Missing required fields: {', '.join(required_fields)}"
+            }
+        }), 400
+
+    return data, None, None
+
 
 @app.route('/api/auth/register/', methods=['POST'])
 def register():
