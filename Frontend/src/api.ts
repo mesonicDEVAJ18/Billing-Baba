@@ -211,4 +211,6 @@ export const createTodo = (data: any) => api.post('/todos/', data);
  */
 export const getTodos = (params?: { completed?: string }) => api.get('/todos/', { params });
 
+export const getProfile = () => api.get('/auth/me/');
+
 export default api;

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 interface User {
   id: string;
@@ -10,7 +11,6 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-
   login: (userData: User) => void;
   logout: () => void;
   token: string | null;
@@ -26,33 +26,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const savedToken = localStorage.getItem('accessToken');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setTokenState(savedToken);
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
+    if (savedToken) {
+      try {
+        const decoded: any = jwtDecode(savedToken);
+        const userFromToken: User = decoded.sub;
+        setTokenState(savedToken);
+        setUser(userFromToken);
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.error('Failed to decode token:', err);
+        localStorage.removeItem('accessToken');
+      }
     }
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-
     setTokenState(null);
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
   };
 
   const setToken = (newToken: string) => {
-    setTokenState(newToken);
-    localStorage.setItem('accessToken', newToken);
+    try {
+      const decoded: any = jwtDecode(newToken);
+      const userFromToken: User = decoded.sub;
+      setUser(userFromToken);
+      setIsAuthenticated(true);
+      setTokenState(newToken);
+      localStorage.setItem('accessToken', newToken);
+    } catch (err) {
+      console.error('Invalid JWT token:', err);
+      logout();
+    }
   };
 
   return (
@@ -63,7 +74,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout, 
       token, 
       setToken 
-
     }}>
       {children}
     </AuthContext.Provider>
