@@ -293,7 +293,6 @@ from datetime import datetime
 @app.route('/api/auth/verify-otp/', methods=['POST'])
 def verify_otp():
     required_fields = ['phone', 'otp', 'otp_id']
-    print("Received JSON:", data)
 
     data, error_response, status = get_json_or_error(required_fields)
     if error_response:
@@ -349,7 +348,6 @@ def verify_otp():
         'access': access_token,
         'refresh': refresh_token
     })
-
 
 @app.route('/api/auth/login/', methods=['POST'])
 def login():
